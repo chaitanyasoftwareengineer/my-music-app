@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Music App - Chaitanya</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', Arial; background: linear-gradient(135deg,#121212,#1a1a2e); color:white; min-height:100vh; padding:20px; }
+.container { max-width:800px; margin:0 auto; }
+h1 { text-align:center; margin:30px 0; font-size:2.5rem; color:#1DB954; }
+.search-box { display:flex; justify-content:center; gap:10px; margin:30px 0; flex-wrap:wrap; }
+#songInput { padding:15px 20px; width:65%; max-width:400px; border-radius:30px; border:none; font-size:16px; outline:none; background:#2a2a2a; color:white; }
+button { padding:15px 30px; border-radius:30px; border:none; background:#1DB954; color:white; cursor:pointer; font-weight:bold; font-size:16px; }
+button:hover { background:#1ed760; transform:scale(1.05); }
+.card { background:#232323; padding:15px; border-radius:12px; margin:15px auto; max-width:600px; display:flex; align-items:center; gap:15px; transition:0.3s; }
+.card:hover { background:#2a2a2a; transform:translateY(-2px); }
+.card img { width:70px; height:70px; border-radius:8px; object-fit:cover; }
+.info { text-align:left; flex:1; }
+.info b { font-size:16px; display:block; }
+.info small { color:#b3b3b3; }
+audio { width:100%; margin-top:8px; height:35px; }
+#results { margin-top:20px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🎵 My Music App</h1>
+<div class="search-box">
+<input id="songInput" type="text" placeholder="Enter song name... e.g. Kesariya">
+<button onclick="searchSong()">Search</button>
+</div>
+<div id="results"></div>
+</div>
+
+<script>
+async function searchSong() {
+  const query = document.getElementById('songInput').value.trim();
+  if(!query) { alert('Please enter song name'); return; }
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = "<p style='text-align:center'>🔍 Searching for '"+query+"'...</p>";
+  try {
+    const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    if(data.error) { resultsDiv.innerHTML = `<p style='text-align:center;color:#ff6b6b'>${data.error}</p>`; return; }
+    if(!data.length) { resultsDiv.innerHTML = "<p style='text-align:center'>No songs found. Try another name.</p>"; return; }
+    let html = "";
+    data.forEach(song => {
+      html += `<div class="card">
+        <img src="${song.image || 'https://via.placeholder.com/70'}" alt="cover" onerror="this.src='https://via.placeholder.com/70'">
+        <div class="info">
+          <b>${song.name}</b>
+          <small>${song.artist}</small>
+          ${song.preview ? `<audio controls src="${song.preview}"></audio>` : ''}
+        </div>
+      </div>`;
+    });
+    resultsDiv.innerHTML = html;
+  } catch(e) {
+    resultsDiv.innerHTML = "<p style='text-align:center;color:#ff6b6b'>Error: Could not connect to server</p>";
+  }
+}
+document.getElementById('songInput').addEventListener('keypress', function(e){ if(e.key==='Enter') searchSong(); });
+</script>
+</body>
+</html>
